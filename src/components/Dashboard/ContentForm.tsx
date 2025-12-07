@@ -88,42 +88,40 @@ export function ContentForm({
     }
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow p-6 mb-8">
-      <h2 className="text-2xl text-black font-bold mb-6">
-        {initialData ? `Edit ${contentType}` : `Add New ${contentType}`}
-      </h2>
+  const contentTypeLabel = contentType.charAt(0).toUpperCase() + contentType.slice(1).replace('-', ' ');
 
+  return (
+    <div className="bg-white rounded-2xl border border-[#fcd5ac] p-8">
       {/* Error message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-red-700 text-sm">{error}</p>
+          <p className="text-red-700 text-sm font-medium">{error}</p>
         </div>
       )}
 
       {/* Success message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+        <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <p className="text-green-700 text-sm">
-            {contentType.charAt(0).toUpperCase() + contentType.slice(1)} saved successfully!
+          <p className="text-green-700 text-sm font-medium">
+            {contentTypeLabel} saved successfully!
           </p>
         </div>
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
-            Title *
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Title <span className="text-[#D9751E]">*</span>
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-gray-500"
+            className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] placeholder:text-[#3A4A5F] bg-white transition-all duration-200"
             placeholder="Enter title"
             disabled={isLoading}
           />
@@ -131,8 +129,8 @@ export function ContentForm({
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
-            Description *
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Description <span className="text-[#D9751E]">*</span>
           </label>
           <RichTextEditor
             content={description}
@@ -143,24 +141,24 @@ export function ContentForm({
 
         {/* Date */}
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
-            Date *
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Date <span className="text-[#D9751E]">*</span>
           </label>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+            className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] bg-white transition-all duration-200"
             disabled={isLoading}
           />
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-3 pt-2">
           <button
             type="submit"
             disabled={isLoading}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg transition"
+            className="flex-1 bg-[#D9751E] hover:bg-[#c1651a] disabled:bg-[#d9a07a] text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
           >
             {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
           </button>
@@ -170,7 +168,7 @@ export function ContentForm({
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-900 font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              className="flex-1 bg-[#f0f0f0] hover:bg-[#e0e0e0] text-[#0B1B2B] font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 border border-[#e0e0e0]"
             >
               Cancel
             </button>

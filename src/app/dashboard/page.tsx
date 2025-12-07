@@ -6,7 +6,89 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
-import { Newspaper, FileText, BookOpen } from 'lucide-react';
+import { Newspaper, FileText, BookOpen, LucideIcon } from 'lucide-react';
+import Image from 'next/image';
+
+// Types
+interface EmptyStateProps {
+  icon: LucideIcon;
+  title: string;
+  message: string;
+}
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  count: number;
+  href: string;
+  isLoading: boolean;
+}
+
+// Loading Skeleton Component
+const StatCardSkeleton = () => (
+  <div className="bg-white rounded-2xl border border-[#fcd5ac] p-6 animate-pulse">
+    <div className="flex items-center gap-4">
+      <div className="h-12 w-12 rounded-xl bg-[#FFE6D5]"></div>
+      <div className="flex-1 space-y-2">
+        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+        <div className="h-8 w-16 bg-gray-200 rounded"></div>
+        <div className="h-3 w-32 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  </div>
+);
+
+// Empty State Component
+const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, message }) => (
+  <div className="bg-white rounded-2xl border border-[#fcd5ac] p-12 text-center">
+    <div className="flex justify-center mb-4">
+      <div className="bg-[#FFE6D5] p-4 rounded-xl">
+        <Icon size={32} className="text-[#D9751E]" />
+      </div>
+    </div>
+    <h3 className="text-lg font-semibold text-[#0B1B2B] mb-2">{title}</h3>
+    <p className="text-[#3A4A5F]">{message}</p>
+  </div>
+);
+
+// Stat Card Component
+const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, count, href, isLoading }) => {
+  if (isLoading) {
+    return <StatCardSkeleton />;
+  }
+
+  if (count === 0) {
+    return (
+      <EmptyState
+        icon={Icon}
+        title={`No ${label.toLowerCase()} yet`}
+        message={`Start creating your first ${label.toLowerCase()} to get started`}
+      />
+    );
+  }
+
+  return (
+    <Link href={href}>
+      <div className="bg-white rounded-2xl border border-[#fcd5ac] p-6 hover:shadow-lg transition-shadow duration-200 cursor-pointer h-full group">
+        <div className="flex items-center gap-4">
+          <div className="bg-[#FFE6D5] p-3 rounded-xl group-hover:bg-[#D9751E] transition-colors duration-200">
+            <Icon
+              size={24}
+              className="text-[#D9751E] group-hover:text-white transition-colors duration-200"
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-[#3A4A5F] text-sm font-semibold">{label}</p>
+            <p className="text-3xl font-medium text-[#0B1B2B] mt-1">{count}</p>
+            <p className="text-[#3A4A5F] text-xs mt-2">
+              Total {label.toLowerCase()}
+            </p>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
 
 export default function DashboardPage() {
   const { isLoading: authLoading } = useProtectedRoute();
@@ -42,68 +124,60 @@ export default function DashboardPage() {
   const isLoading = newslettersLoading || blogsLoading || caseStudiesLoading;
 
   if (authLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D9751E] mx-auto"></div>
+          <p className="mt-4 text-[#3A4A5F]">Loading dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div>
-      <h1 className="text-4xl text-black font-bold mb-8">Dashboard</h1>
+      {/* Page Title */}
+      <h1 className="text-4xl font-medium leading-[48px] text-[#0B1B2B] mb-8">
+        Dashboard
+      </h1>
+
+      {/* Divider Line */}
+      <div className="mb-12 flex justify-start">
+        <Image
+          src="/icons/horizontalline.svg"
+          alt=""
+          width={200}
+          height={3}
+          className="w-48"
+          aria-hidden
+        />
+      </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        {/* Newsletters card */}
-        <Link href="/dashboard/newsletters">
-          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <Newspaper className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-gray-600 text-sm font-semibold">Newsletters</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {isLoading ? '--' : newsletters.length}
-                </p>
-                <p className="text-gray-500 text-xs mt-1">Total newsletters</p>
-              </div>
-            </div>
-          </div>
-        </Link>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <StatCard
+          icon={Newspaper}
+          label="Newsletters"
+          count={newsletters.length}
+          href="/dashboard/newsletters"
+          isLoading={newslettersLoading}
+        />
 
-        {/* Blogs card */}
-        <Link href="/dashboard/blogs">
-          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <FileText className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-gray-600 text-sm font-semibold">Blogs</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {isLoading ? '--' : blogs.length}
-                </p>
-                <p className="text-gray-500 text-xs mt-1">Total blogs</p>
-              </div>
-            </div>
-          </div>
-        </Link>
+        <StatCard
+          icon={FileText}
+          label="Blogs"
+          count={blogs.length}
+          href="/dashboard/blogs"
+          isLoading={blogsLoading}
+        />
 
-        {/* Case Studies card */}
-        <Link href="/dashboard/case-studies">
-          <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <BookOpen className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-gray-600 text-sm font-semibold">Case Studies</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {isLoading ? '--' : caseStudies.length}
-                </p>
-                <p className="text-gray-500 text-xs mt-1">Total case studies</p>
-              </div>
-            </div>
-          </div>
-        </Link>
+        <StatCard
+          icon={BookOpen}
+          label="Case Studies"
+          count={caseStudies.length}
+          href="/dashboard/case-studies"
+          isLoading={caseStudiesLoading}
+        />
       </div>
     </div>
   );

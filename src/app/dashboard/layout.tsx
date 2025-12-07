@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { LogOut, LayoutDashboard, FileText, Newspaper, BookOpen } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Newspaper, BookOpen, ChevronLeft } from 'lucide-react';
+import Image from 'next/image';
 
 export default function DashboardLayout({
   children,
@@ -15,13 +16,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const { isAuthenticated } = useProtectedRoute();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D9751E] mx-auto"></div>
+          <p className="mt-4 text-[#3A4A5F]">Loading...</p>
         </div>
       </div>
     );
@@ -32,74 +34,113 @@ export default function DashboardLayout({
     router.push('/auth/login');
   };
 
+  const navItems = [
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
+    { href: '/dashboard/newsletters', icon: Newspaper, label: 'Newsletters' },
+    { href: '/dashboard/blogs', icon: FileText, label: 'Blogs' },
+    { href: '/dashboard/case-studies', icon: BookOpen, label: 'Case Studies' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-900 text-white p-6 overflow-y-auto">
-        {/* Logo/Title */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">CMS Dashboard</h1>
-          <p className="text-gray-400 text-sm mt-1">Manage your content</p>
+      <aside
+        className={`fixed left-0 top-0 h-screen bg-[#0B1B2B] text-white p-6 overflow-y-auto transition-all duration-300 ease-in-out z-50 ${
+          sidebarOpen ? 'w-64' : 'w-24'
+        }`}
+      >
+        {/* Logo and Close Button */}
+        <div className="flex items-center justify-between mb-8">
+          {sidebarOpen && (
+            <div className="flex-1">
+              <Image
+                src="/icons/logo.svg"
+                alt="Logo"
+                width={160}
+                height={32}
+                priority
+              />
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-[#1a2a3a] rounded-lg transition-colors duration-200"
+            aria-label="Toggle sidebar"
+          >
+            <ChevronLeft
+              size={20}
+              className={`transition-transform duration-300 ${
+                !sidebarOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
         </div>
 
-        {/* User info */}
-        <div className="bg-gray-800 rounded-lg p-4 mb-8">
-          <p className="text-xs text-gray-400">Logged in as</p>
-          <p className="font-semibold text-white">{user?.username}</p>
-          <p className="text-xs text-gray-400">{user?.email}</p>
-        </div>
+        {/* User info - only show when sidebar is open */}
+        {sidebarOpen && (
+          <div className="bg-[#1a2a3a] rounded-lg p-4 mb-8">
+            <p className="text-xs text-gray-400">Logged in as</p>
+            <p className="font-semibold text-white mt-1">{user?.username}</p>
+            <p className="text-xs text-gray-400 mt-1">{user?.email}</p>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="space-y-2">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
-          >
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </Link>
-
-          <Link
-            href="/dashboard/newsletters"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
-          >
-            <Newspaper size={20} />
-            <span>Newsletters</span>
-          </Link>
-
-          <Link
-            href="/dashboard/blogs"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
-          >
-            <FileText size={20} />
-            <span>Blogs</span>
-          </Link>
-
-          <Link
-            href="/dashboard/case-studies"
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition"
-          >
-            <BookOpen size={20} />
-            <span>Case Studies</span>
-          </Link>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#D9751E] transition-colors duration-200 group"
+                title={!sidebarOpen ? item.label : ''}
+              >
+                <Icon
+                  size={20}
+                  className="text-[#D9751E] group-hover:text-white transition-colors duration-200"
+                />
+                {sidebarOpen && <span className="text-sm">{item.label}</span>}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Logout button */}
-        <div className="absolute bottom-6 left-6 right-6">
+        <div
+          className={`absolute bottom-6 left-6 right-6 transition-all duration-300 ${
+            sidebarOpen ? 'w-auto' : 'w-12'
+          }`}
+        >
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition font-semibold"
+            className="w-full flex items-center gap-3 px-4 py-3 bg-[#D9751E] hover:bg-[#c1651a] rounded-lg transition-colors duration-200 font-semibold"
+            title={!sidebarOpen ? 'Logout' : ''}
           >
             <LogOut size={20} />
-            <span>Logout</span>
+            {sidebarOpen && <span className="text-sm">Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 p-8">
-        {children}
+      <main
+        className={`transition-all duration-300 ${
+          sidebarOpen ? 'ml-64' : 'ml-24'
+        }`}
+      >
+        <div className="p-8">
+          {children}
+        </div>
       </main>
+
+      {/* Overlay for mobile when sidebar is open */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
