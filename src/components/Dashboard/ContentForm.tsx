@@ -127,18 +127,6 @@ export function ContentForm({
           />
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
-            Description <span className="text-[#D9751E]">*</span>
-          </label>
-          <RichTextEditor
-            content={description}
-            onChange={setDescription}
-            disabled={isLoading}
-          />
-        </div>
-
         {/* Date */}
         <div>
           <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
@@ -148,7 +136,19 @@ export function ContentForm({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] bg-white transition-all duration-200"
+            className="w-48 px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] bg-white transition-all duration-200"
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Description <span className="text-[#D9751E]">*</span>
+          </label>
+          <RichTextEditor
+            content={description}
+            onChange={setDescription}
             disabled={isLoading}
           />
         </div>

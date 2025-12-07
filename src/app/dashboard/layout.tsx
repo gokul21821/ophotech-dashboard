@@ -76,14 +76,6 @@ export default function DashboardLayout({
           </button>
         </div>
 
-        {/* User info - only show when sidebar is open */}
-        {sidebarOpen && (
-          <div className="bg-[#1a2a3a] rounded-lg p-4 mb-8">
-            <p className="text-xs text-gray-400">Logged in as</p>
-            <p className="font-semibold text-white mt-1">{user?.username}</p>
-            <p className="text-xs text-gray-400 mt-1">{user?.email}</p>
-          </div>
-        )}
 
         {/* Navigation */}
         <nav className="space-y-2">
@@ -106,12 +98,18 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* Logout button */}
+        {/* User info and Logout button */}
         <div
           className={`absolute bottom-6 left-6 right-6 transition-all duration-300 ${
             sidebarOpen ? 'w-auto' : 'w-12'
           }`}
         >
+          {sidebarOpen && (
+            <div className="bg-[#1a2a3a] rounded-lg p-4 mb-4">
+              <p className="text-xs text-gray-400">Logged in as</p>
+              <p className="font-semibold text-white mt-1">{user?.username}</p>
+            </div>
+          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 bg-[#D9751E] hover:bg-[#c1651a] rounded-lg transition-colors duration-200 font-semibold"

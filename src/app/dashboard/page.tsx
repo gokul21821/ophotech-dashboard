@@ -13,7 +13,6 @@ import Image from 'next/image';
 interface EmptyStateProps {
   icon: LucideIcon;
   title: string;
-  message: string;
 }
 
 interface StatCardProps {
@@ -39,7 +38,7 @@ const StatCardSkeleton = () => (
 );
 
 // Empty State Component
-const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, message }) => (
+const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title }) => (
   <div className="bg-white rounded-2xl border border-[#fcd5ac] p-12 text-center">
     <div className="flex justify-center mb-4">
       <div className="bg-[#FFE6D5] p-4 rounded-xl">
@@ -47,7 +46,6 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, message }) =
       </div>
     </div>
     <h3 className="text-lg font-semibold text-[#0B1B2B] mb-2">{title}</h3>
-    <p className="text-[#3A4A5F]">{message}</p>
   </div>
 );
 
@@ -62,7 +60,6 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, count, href, isL
       <EmptyState
         icon={Icon}
         title={`No ${label.toLowerCase()} yet`}
-        message={`Start creating your first ${label.toLowerCase()} to get started`}
       />
     );
   }

@@ -3,8 +3,21 @@ import Providers from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CMS Dashboard',
-  description: 'Manage your newsletters, blogs, and case studies',
+  title: "OphoTech | AI-Powered MVP Development in 15 Days",
+  description:
+    "Transform your vision into production-ready MVPs with OphoTech's AI-driven development approach.",
+  icons: {
+    icon: "/icons/titlebar.svg",
+  },
+  openGraph: {
+    title: "OphoTech | AI-Powered MVP Development in 15 Days",
+    description:
+      "Transform your vision into production-ready MVPs with OphoTech's AI-driven development approach.",
+    url: "https://ophotech.com",
+    siteName: "OphoTech",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
