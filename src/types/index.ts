@@ -22,6 +22,8 @@ export interface User {
       authorId: string;
       createdAt: string;
       updatedAt: string;
+  imagePath?: string | null;
+  imageUrl?: string | null;
       author: {
         id: string;
         username: string;
@@ -37,6 +39,8 @@ export interface User {
       authorId: string;
       createdAt: string;
       updatedAt: string;
+  imagePath?: string | null;
+  imageUrl?: string | null;
       author: {
         id: string;
         username: string;
@@ -52,6 +56,8 @@ export interface User {
       authorId: string;
       createdAt: string;
       updatedAt: string;
+  imagePath?: string | null;
+  imageUrl?: string | null;
       author: {
         id: string;
         username: string;

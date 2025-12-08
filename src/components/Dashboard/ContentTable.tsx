@@ -4,6 +4,7 @@ import React from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import { Newsletter, Blog, CaseStudy } from '@/types';
 import { formatDate } from '@/lib/utils';
+import Image from 'next/image';
 
 // Loading Skeleton Row
 const TableRowSkeleton = () => (
@@ -55,6 +56,9 @@ export function ContentTable({
         <table className="w-full">
           <thead className="bg-gradient-to-r from-white to-[#FFF6EB] border-b border-[#fcd5ac]">
             <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
+                Image
+              </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Title
               </th>
@@ -116,7 +120,7 @@ export function ContentTable({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#fcd5ac]">
+              <tbody className="divide-y divide-[#fcd5ac]">
             {data.map((item, index) => (
               <tr
                 key={item.id}
@@ -124,6 +128,23 @@ export function ContentTable({
                   index % 2 === 0 ? 'hover:bg-[#FFF6EB]' : 'hover:bg-[#FFFAF5]'
                 }`}
               >
+                <td className="px-6 py-4">
+                  {item.imageUrl ? (
+                    <div className="h-14 w-14 rounded-lg overflow-hidden border border-[#fcd5ac] bg-white">
+                      <Image
+                        src={item.imageUrl}
+                        alt={`${item.title} image`}
+                        width={56}
+                        height={56}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-14 w-14 rounded-lg border border-dashed border-[#fcd5ac] flex items-center justify-center text-xs text-[#3A4A5F]">
+                      —
+                    </div>
+                  )}
+                </td>
                 <td className="px-6 py-4">
                   <p className="font-semibold text-[#0B1B2B]">{item.title}</p>
                 </td>

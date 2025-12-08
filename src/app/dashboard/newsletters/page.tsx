@@ -10,6 +10,7 @@ import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { Newspaper } from 'lucide-react';
 import Image from 'next/image';
+import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -73,12 +74,31 @@ export default function NewslettersPage() {
       title: string;
       description: string;
       date: string;
+      imageFile?: File | null;
+      removeImage?: boolean;
     }) => {
-      if (editingId) {
-        return api.put(API_ENDPOINTS.UPDATE_NEWSLETTER(editingId), data);
-      } else {
-        return api.post(API_ENDPOINTS.CREATE_NEWSLETTER, data);
+      // Create or update content
+      const payload = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+      };
+
+      const res = editingId
+        ? await api.put(API_ENDPOINTS.UPDATE_NEWSLETTER(editingId), payload)
+        : await api.post(API_ENDPOINTS.CREATE_NEWSLETTER, payload);
+
+      const id = editingId || res.data?.data?.id;
+
+      // Image handling: delete if requested, then upload if file provided
+      if (id && data.removeImage) {
+        await deleteContentImage('newsletter', id);
       }
+      if (id && data.imageFile) {
+        await uploadContentImage('newsletter', id, data.imageFile);
+      }
+
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newsletters'] });
@@ -122,6 +142,8 @@ export default function NewslettersPage() {
     title: string;
     description: string;
     date: string;
+    imageFile?: File | null;
+    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };

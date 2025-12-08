@@ -10,6 +10,7 @@ import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { FileText } from 'lucide-react';
 import Image from 'next/image';
+import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -73,12 +74,29 @@ export default function BlogsPage() {
       title: string;
       description: string;
       date: string;
+      imageFile?: File | null;
+      removeImage?: boolean;
     }) => {
-      if (editingId) {
-        return api.put(API_ENDPOINTS.UPDATE_BLOG(editingId), data);
-      } else {
-        return api.post(API_ENDPOINTS.CREATE_BLOG, data);
+      const payload = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+      };
+
+      const res = editingId
+        ? await api.put(API_ENDPOINTS.UPDATE_BLOG(editingId), payload)
+        : await api.post(API_ENDPOINTS.CREATE_BLOG, payload);
+
+      const id = editingId || res.data?.data?.id;
+
+      if (id && data.removeImage) {
+        await deleteContentImage('blog', id);
       }
+      if (id && data.imageFile) {
+        await uploadContentImage('blog', id, data.imageFile);
+      }
+
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
@@ -123,6 +141,8 @@ export default function BlogsPage() {
     title: string;
     description: string;
     date: string;
+    imageFile?: File | null;
+    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };

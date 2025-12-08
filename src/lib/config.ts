@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
   CREATE_NEWSLETTER: '/api/newsletters',
   UPDATE_NEWSLETTER: (id: string) => `/api/newsletters/${id}`,
   DELETE_NEWSLETTER: (id: string) => `/api/newsletters/${id}`,
+  UPLOAD_NEWSLETTER_IMAGE: (id: string) => `/api/newsletters/${id}/image`,
+  DELETE_NEWSLETTER_IMAGE: (id: string) => `/api/newsletters/${id}/image`,
 
   // Blogs
   GET_BLOGS: '/api/blogs',
@@ -19,6 +21,8 @@ export const API_ENDPOINTS = {
   CREATE_BLOG: '/api/blogs',
   UPDATE_BLOG: (id: string) => `/api/blogs/${id}`,
   DELETE_BLOG: (id: string) => `/api/blogs/${id}`,
+  UPLOAD_BLOG_IMAGE: (id: string) => `/api/blogs/${id}/image`,
+  DELETE_BLOG_IMAGE: (id: string) => `/api/blogs/${id}/image`,
 
   // Case Studies
   GET_CASE_STUDIES: '/api/case-studies',
@@ -26,4 +30,6 @@ export const API_ENDPOINTS = {
   CREATE_CASE_STUDY: '/api/case-studies',
   UPDATE_CASE_STUDY: (id: string) => `/api/case-studies/${id}`,
   DELETE_CASE_STUDY: (id: string) => `/api/case-studies/${id}`,
+  UPLOAD_CASE_STUDY_IMAGE: (id: string) => `/api/case-studies/${id}/image`,
+  DELETE_CASE_STUDY_IMAGE: (id: string) => `/api/case-studies/${id}/image`,
 };

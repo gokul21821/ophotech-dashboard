@@ -10,6 +10,7 @@ import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { BookOpen } from 'lucide-react';
 import Image from 'next/image';
+import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -73,12 +74,29 @@ export default function CaseStudiesPage() {
       title: string;
       description: string;
       date: string;
+      imageFile?: File | null;
+      removeImage?: boolean;
     }) => {
-      if (editingId) {
-        return api.put(API_ENDPOINTS.UPDATE_CASE_STUDY(editingId), data);
-      } else {
-        return api.post(API_ENDPOINTS.CREATE_CASE_STUDY, data);
+      const payload = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+      };
+
+      const res = editingId
+        ? await api.put(API_ENDPOINTS.UPDATE_CASE_STUDY(editingId), payload)
+        : await api.post(API_ENDPOINTS.CREATE_CASE_STUDY, payload);
+
+      const id = editingId || res.data?.data?.id;
+
+      if (id && data.removeImage) {
+        await deleteContentImage('case-study', id);
       }
+      if (id && data.imageFile) {
+        await uploadContentImage('case-study', id, data.imageFile);
+      }
+
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-studies'] });
@@ -123,6 +141,8 @@ export default function CaseStudiesPage() {
     title: string;
     description: string;
     date: string;
+    imageFile?: File | null;
+    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };
