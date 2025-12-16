@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Newsletter, Blog, CaseStudy } from '@/types';
 import { formatDateForInput } from '@/lib/utils';
 import { AlertCircle, CheckCircle, Upload } from 'lucide-react';
@@ -36,6 +36,11 @@ export function ContentForm({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+
+  // Refs for scroll-to-error functionality
+  const titleRef = useRef<HTMLInputElement>(null);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLDivElement>(null);
 
   // Load initial data when editing
   useEffect(() => {
@@ -104,19 +109,27 @@ export function ContentForm({
     setError('');
     setSuccess(false);
 
-    // Validation
+    // Validation with scroll-to-error
     if (!title.trim()) {
       setError('Title is required');
-      return;
-    }
-
-    if (!description.trim()) {
-      setError('Description is required');
+      titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      titleRef.current?.focus();
       return;
     }
 
     if (!date) {
       setError('Date is required');
+      dateRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      dateRef.current?.focus();
+      return;
+    }
+
+    if (!description.trim()) {
+      setError('Description is required');
+      descriptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Focus the editor content area
+      const editorContent = descriptionRef.current?.querySelector('[contenteditable="true"]') as HTMLElement;
+      editorContent?.focus();
       return;
     }
 
@@ -148,10 +161,39 @@ export function ContentForm({
   const contentTypeLabel = contentType.charAt(0).toUpperCase() + contentType.slice(1).replace('-', ' ');
 
   return (
-    <div className="bg-white rounded-2xl border border-[#fcd5ac] p-8">
+    <div className="bg-white rounded-2xl border border-[#fcd5ac]">
+      {/* Header with Title and Actions */}
+      <div className="sticky top-0 z-10 px-8 py-6 border-b border-[#fcd5ac] bg-gradient-to-r from-white to-[#FFF6EB] shadow-sm">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-[#0B1B2B]">
+            {initialData ? 'Edit' : 'Create'} {contentTypeLabel}
+          </h1>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="bg-[#D9751E] hover:bg-[#c1651a] disabled:bg-[#d9a07a] text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 flex items-center gap-2"
+            >
+              {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
+            </button>
+
+            {initialData && onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={isLoading}
+                className="bg-[#f0f0f0] hover:bg-[#e0e0e0] text-[#0B1B2B] font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 border border-[#e0e0e0]"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Error message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
+        <div className="mx-8 mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-red-700 text-sm font-medium">{error}</p>
         </div>
@@ -159,7 +201,7 @@ export function ContentForm({
 
       {/* Success message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start gap-3">
+        <div className="mx-8 mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <p className="text-green-700 text-sm font-medium">
             {contentTypeLabel} saved successfully!
@@ -168,13 +210,14 @@ export function ContentForm({
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="p-8 pt-6 space-y-6">
         {/* Title */}
         <div>
           <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
             Title <span className="text-[#D9751E]">*</span>
           </label>
           <input
+            ref={titleRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -248,6 +291,7 @@ export function ContentForm({
             Date <span className="text-[#D9751E]">*</span>
           </label>
           <input
+            ref={dateRef}
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -257,33 +301,8 @@ export function ContentForm({
         </div>
 
         {/* Description */}
-        <div>
-          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
-            Description <span className="text-[#D9751E]">*</span>
-          </label>
+        <div ref={descriptionRef}>
           <RichTextEditor content={description} onChange={setDescription} disabled={isLoading} />
-        </div>
-
-        {/* Buttons */}
-        <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 bg-[#D9751E] hover:bg-[#c1651a] disabled:bg-[#d9a07a] text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200"
-          >
-            {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
-          </button>
-
-          {initialData && onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isLoading}
-              className="flex-1 bg-[#f0f0f0] hover:bg-[#e0e0e0] text-[#0B1B2B] font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 border border-[#e0e0e0]"
-            >
-              Cancel
-            </button>
-          )}
         </div>
       </form>
     </div>
