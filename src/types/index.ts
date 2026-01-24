@@ -19,6 +19,7 @@ export interface User {
       title: string;
       description: string;
       date: string;
+  edition?: string | null;
       authorId: string;
       createdAt: string;
       updatedAt: string;
@@ -53,6 +54,7 @@ export interface User {
       title: string;
       description: string;
       date: string;
+  category?: string | null;
       authorId: string;
       createdAt: string;
       updatedAt: string;

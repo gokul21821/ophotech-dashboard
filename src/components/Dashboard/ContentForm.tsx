@@ -12,6 +12,8 @@ interface ContentFormProps {
     title: string;
     description: string;
     date: string;
+    edition?: string;
+    category?: string;
     imageFile?: File | null;
     removeImage?: boolean;
   }) => Promise<void>;
@@ -31,6 +33,8 @@ export function ContentForm({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [edition, setEdition] = useState('');
+  const [category, setCategory] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,6 +52,8 @@ export function ContentForm({
       setTitle(initialData.title);
       setDescription(initialData.description);
       setDate(formatDateForInput(initialData.date));
+      setEdition(contentType === 'newsletter' ? (initialData as Newsletter).edition ?? '' : '');
+      setCategory(contentType === 'case-study' ? (initialData as CaseStudy).category ?? '' : '');
       setPreviewUrl(initialData.imageUrl || null);
       setImageFile(null);
       setRemoveImage(false);
@@ -56,13 +62,15 @@ export function ContentForm({
       setTitle('');
       setDescription('');
       setDate(formatDateForInput(new Date().toISOString()));
+      setEdition('');
+      setCategory('');
       setPreviewUrl(null);
       setImageFile(null);
       setRemoveImage(false);
     }
     setError('');
     setSuccess(false);
-  }, [initialData]);
+  }, [initialData, contentType]);
 
   const handleFileSelected = (file: File | undefined | null) => {
     if (!file) {
@@ -138,6 +146,8 @@ export function ContentForm({
         title: title.trim(),
         description: description.trim(),
         date,
+        edition: contentType === 'newsletter' ? (edition.trim() || undefined) : undefined,
+        category: contentType === 'case-study' ? (category.trim() || undefined) : undefined,
         imageFile,
         removeImage,
       });
@@ -146,6 +156,8 @@ export function ContentForm({
       setTitle('');
       setDescription('');
       setDate(formatDateForInput(new Date().toISOString()));
+      setEdition('');
+      setCategory('');
       setPreviewUrl(null);
       setImageFile(null);
       setRemoveImage(false);
@@ -299,6 +311,39 @@ export function ContentForm({
             disabled={isLoading}
           />
         </div>
+
+        {/* Edition / Category (optional) */}
+        {contentType === 'newsletter' && (
+          <div>
+            <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+              Edition <span className="text-[#3A4A5F] font-medium">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={edition}
+              onChange={(e) => setEdition(e.target.value)}
+              className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] placeholder:text-[#3A4A5F] bg-white transition-all duration-200"
+              placeholder='e.g. "Edition 001"'
+              disabled={isLoading}
+            />
+          </div>
+        )}
+
+        {contentType === 'case-study' && (
+          <div>
+            <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+              Category <span className="text-[#3A4A5F] font-medium">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] placeholder:text-[#3A4A5F] bg-white transition-all duration-200"
+              placeholder='e.g. "IT & services"'
+              disabled={isLoading}
+            />
+          </div>
+        )}
 
         {/* Description */}
         <div ref={descriptionRef}>

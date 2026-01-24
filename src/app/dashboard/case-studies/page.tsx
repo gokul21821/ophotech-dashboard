@@ -74,6 +74,7 @@ export default function CaseStudiesPage() {
       title: string;
       description: string;
       date: string;
+      category?: string;
       imageFile?: File | null;
       removeImage?: boolean;
     }) => {
@@ -81,6 +82,7 @@ export default function CaseStudiesPage() {
         title: data.title,
         description: data.description,
         date: data.date,
+        category: data.category,
       };
 
       const res = editingId
@@ -141,6 +143,7 @@ export default function CaseStudiesPage() {
     title: string;
     description: string;
     date: string;
+    category?: string;
     imageFile?: File | null;
     removeImage?: boolean;
   }) => {

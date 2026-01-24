@@ -74,6 +74,7 @@ export default function NewslettersPage() {
       title: string;
       description: string;
       date: string;
+      edition?: string;
       imageFile?: File | null;
       removeImage?: boolean;
     }) => {
@@ -82,6 +83,7 @@ export default function NewslettersPage() {
         title: data.title,
         description: data.description,
         date: data.date,
+        edition: data.edition,
       };
 
       const res = editingId
@@ -142,6 +144,7 @@ export default function NewslettersPage() {
     title: string;
     description: string;
     date: string;
+    edition?: string;
     imageFile?: File | null;
     removeImage?: boolean;
   }) => {

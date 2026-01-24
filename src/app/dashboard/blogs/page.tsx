@@ -74,6 +74,8 @@ export default function BlogsPage() {
       title: string;
       description: string;
       date: string;
+      edition?: string;
+      category?: string;
       imageFile?: File | null;
       removeImage?: boolean;
     }) => {
@@ -141,6 +143,8 @@ export default function BlogsPage() {
     title: string;
     description: string;
     date: string;
+    edition?: string;
+    category?: string;
     imageFile?: File | null;
     removeImage?: boolean;
   }) => {

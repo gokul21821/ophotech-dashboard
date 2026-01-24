@@ -7,14 +7,22 @@ import { formatDate } from '@/lib/utils';
 import Image from 'next/image';
 
 // Loading Skeleton Row
-const TableRowSkeleton = () => (
+const TableRowSkeleton = ({ showMeta }: { showMeta: boolean }) => (
   <tr className="border-b border-[#fcd5ac]">
+    <td className="px-6 py-4">
+      <div className="h-14 w-14 bg-gray-200 rounded animate-pulse"></div>
+    </td>
     <td className="px-6 py-4">
       <div className="space-y-2">
         <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
         <div className="h-3 w-96 bg-gray-200 rounded animate-pulse"></div>
       </div>
     </td>
+    {showMeta && (
+      <td className="px-6 py-4">
+        <div className="h-4 w-28 bg-gray-200 rounded animate-pulse"></div>
+      </td>
+    )}
     <td className="px-6 py-4">
       <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
     </td>
@@ -50,6 +58,15 @@ export function ContentTable({
   isLoading,
   contentType,
 }: ContentTableProps) {
+  const showMeta = contentType !== 'blog';
+  const metaHeader = contentType === 'newsletter' ? 'Edition' : 'Category';
+
+  const getMetaValue = (item: Newsletter | Blog | CaseStudy): string => {
+    if (contentType === 'newsletter') return (item as Newsletter).edition ?? '—';
+    if (contentType === 'case-study') return (item as CaseStudy).category ?? '—';
+    return '—';
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-2xl border border-[#fcd5ac] overflow-hidden">
@@ -62,6 +79,11 @@ export function ContentTable({
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Title
               </th>
+              {showMeta && (
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
+                  {metaHeader}
+                </th>
+              )}
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Author
               </th>
@@ -78,7 +100,7 @@ export function ContentTable({
           </thead>
           <tbody>
             {[1, 2, 3, 4, 5].map((i) => (
-              <TableRowSkeleton key={i} />
+              <TableRowSkeleton key={i} showMeta={showMeta} />
             ))}
           </tbody>
         </table>
@@ -104,8 +126,16 @@ export function ContentTable({
           <thead className="bg-gradient-to-r from-white to-[#FFF6EB] border-b border-[#fcd5ac]">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
+                Image
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Title
               </th>
+              {showMeta && (
+                <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
+                  {metaHeader}
+                </th>
+              )}
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Author
               </th>
@@ -148,6 +178,11 @@ export function ContentTable({
                 <td className="px-6 py-4">
                   <p className="font-semibold text-[#0B1B2B]">{item.title}</p>
                 </td>
+                {showMeta && (
+                  <td className="px-6 py-4 text-sm text-[#3A4A5F]">
+                    {getMetaValue(item)}
+                  </td>
+                )}
                 <td className="px-6 py-4 text-sm text-[#3A4A5F]">
                   {item.author.username}
                 </td>
