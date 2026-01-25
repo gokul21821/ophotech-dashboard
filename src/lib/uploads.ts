@@ -1,11 +1,16 @@
 import api from './api';
 import { API_ENDPOINTS } from './config';
 
-export async function uploadContentImage(
+export type InlineImageUploadResult = {
+  url: string;
+  filePath: string;
+};
+
+export async function uploadInlineImage(
   type: 'newsletter' | 'blog' | 'case-study',
   id: string,
   file: File
-): Promise<string | null> {
+): Promise<InlineImageUploadResult> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -20,20 +25,12 @@ export async function uploadContentImage(
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-  return res.data?.data?.imageUrl ?? null;
+  const url = res.data?.data?.url;
+  const filePath = res.data?.data?.filePath;
+  if (!url || !filePath) {
+    throw new Error('Upload succeeded but response is missing url/filePath');
+  }
+  return { url, filePath };
 }
 
-export async function deleteContentImage(
-  type: 'newsletter' | 'blog' | 'case-study',
-  id: string
-): Promise<void> {
-  const endpoint =
-    type === 'newsletter'
-      ? API_ENDPOINTS.DELETE_NEWSLETTER_IMAGE(id)
-      : type === 'blog'
-      ? API_ENDPOINTS.DELETE_BLOG_IMAGE(id)
-      : API_ENDPOINTS.DELETE_CASE_STUDY_IMAGE(id);
-
-  await api.delete(endpoint);
-}
-
+// Note: inline images are cleaned up by backend sync/purge on save.

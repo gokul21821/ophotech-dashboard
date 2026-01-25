@@ -12,19 +12,20 @@ export interface User {
       user: User;
       token: string;
     }
+
+export type TiptapDoc = Record<string, any>;
     
     // Content types
     export interface Newsletter {
       id: string;
       title: string;
-      description: string;
+      content: TiptapDoc; // Required
       date: string;
-  edition?: string | null;
+      edition?: string | null;
       authorId: string;
       createdAt: string;
       updatedAt: string;
-  imagePath?: string | null;
-  imageUrl?: string | null;
+      imageUrl?: string | null; // Derived from content
       author: {
         id: string;
         username: string;
@@ -35,13 +36,12 @@ export interface User {
     export interface Blog {
       id: string;
       title: string;
-      description: string;
+      content: TiptapDoc; // Required
       date: string;
       authorId: string;
       createdAt: string;
       updatedAt: string;
-  imagePath?: string | null;
-  imageUrl?: string | null;
+      imageUrl?: string | null; // Derived from content
       author: {
         id: string;
         username: string;
@@ -52,14 +52,13 @@ export interface User {
     export interface CaseStudy {
       id: string;
       title: string;
-      description: string;
+      content: TiptapDoc; // Required
       date: string;
-  category?: string | null;
+      category?: string | null;
       authorId: string;
       createdAt: string;
       updatedAt: string;
-  imagePath?: string | null;
-  imageUrl?: string | null;
+      imageUrl?: string | null; // Derived from content
       author: {
         id: string;
         username: string;

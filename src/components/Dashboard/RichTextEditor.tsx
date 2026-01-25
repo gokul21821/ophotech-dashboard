@@ -5,6 +5,9 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import { uploadInlineImage } from '@/lib/uploads';
+import type { TiptapDoc } from '@/types';
 import {
   Bold,
   Italic,
@@ -23,9 +26,11 @@ import {
 } from 'lucide-react';
 
 interface RichTextEditorProps {
-  content: string;
-  onChange: (html: string) => void;
+  content: TiptapDoc;
+  onChange: (doc: TiptapDoc) => void;
   disabled?: boolean;
+  contentId: string;
+  contentType: 'newsletter' | 'blog' | 'case-study';
 }
 
 interface EditorState {
@@ -42,6 +47,8 @@ export function RichTextEditor({
   content,
   onChange,
   disabled,
+  contentId,
+  contentType,
 }: RichTextEditorProps) {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -64,6 +71,17 @@ export function RichTextEditor({
   const linkInputRef = useRef<HTMLInputElement>(null);
   const fontSizeRef = useRef<HTMLDivElement>(null);
 
+  const ImageWithFilePath = Image.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        filePath: {
+          default: null,
+        },
+      };
+    },
+  });
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -78,28 +96,110 @@ export function RichTextEditor({
           class: 'text-[#D9751E] hover:text-[#c1651a] underline font-medium',
         },
       }),
+      ImageWithFilePath.configure({
+        inline: false,
+        allowBase64: false,
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      onChange(html);
+      const json = editor.getJSON() as TiptapDoc;
+      onChange(json);
       updateStats(editor);
       updateEditorState(editor);
     },
     onSelectionUpdate: ({ editor }) => {
       updateEditorState(editor);
     },
+    editorProps: {
+      handlePaste: (view, event) => {
+        if (disabled) return false;
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file) void handleImageUpload(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (disabled) return false;
+        if (moved) return false;
+        const file = event.dataTransfer?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+          event.preventDefault();
+          void handleImageUpload(file);
+          return true;
+        }
+        return false;
+      },
+    },
     editable: !disabled,
     immediatelyRender: false,
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (editor) {
+      const current = editor.getJSON() as TiptapDoc;
+      // Shallow compare is fine for avoiding infinite loops; setContent is idempotent enough.
+      if (JSON.stringify(content) !== JSON.stringify(current)) {
       editor.commands.setContent(content);
       updateStats(editor);
       updateEditorState(editor);
+      }
     }
   }, [content, editor]);
+
+  const handleImageUpload = async (file: File) => {
+    if (!editor) return;
+    if (disabled) return;
+
+    // Insert a placeholder image first
+    const blobUrl = URL.createObjectURL(file);
+    editor.chain().focus().setImage({ src: blobUrl, alt: 'Uploading…', filePath: '__uploading__' } as any).run();
+
+    try {
+      const { url, filePath } = await uploadInlineImage(contentType, contentId, file);
+
+      // Find the placeholder and replace its attrs
+      const { state, view } = editor;
+      let foundPos: number | null = null;
+
+      state.doc.descendants((node, pos) => {
+        if (node.type.name === 'image' && node.attrs?.src === blobUrl) {
+          foundPos = pos;
+          return false;
+        }
+        return true;
+      });
+
+      if (foundPos !== null) {
+        const tr = state.tr.setNodeMarkup(foundPos, undefined, {
+          ...state.doc.nodeAt(foundPos)?.attrs,
+          src: url,
+          filePath,
+          alt: nodeSafeAlt(file),
+        });
+        view.dispatch(tr);
+      } else {
+        // Fallback: insert at cursor if we can't find it
+        editor.chain().focus().setImage({ src: url, filePath, alt: nodeSafeAlt(file) } as any).run();
+      }
+    } catch (e) {
+      console.error('Inline image upload failed:', e);
+      // Best-effort: leave the blob image in place; user can retry by deleting/reinserting.
+    }
+  };
+
+  const nodeSafeAlt = (file: File) => {
+    const name = file.name?.trim();
+    return name ? name : 'Image';
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

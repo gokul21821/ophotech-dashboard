@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { ContentForm } from '@/components/Dashboard/ContentForm';
 import { ContentTable } from '@/components/Dashboard/ContentTable';
-import { Blog } from '@/types';
+import type { Blog, TiptapDoc } from '@/types';
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { FileText } from 'lucide-react';
 import Image from 'next/image';
-import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -53,7 +52,26 @@ const EmptyTableState = () => (
 export default function BlogsPage() {
   const { isLoading: authLoading } = useProtectedRoute();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const createDraftMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post(API_ENDPOINTS.CREATE_BLOG_DRAFT);
+      return res.data?.data as Blog;
+    },
+    onSuccess: (draft) => {
+      setDraftId(draft.id);
+    },
+  });
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (editingId) return;
+    if (draftId) return;
+    if (createDraftMutation.isPending) return;
+    createDraftMutation.mutate();
+  }, [authLoading, editingId, draftId, createDraftMutation]);
 
   // Fetch blogs
   const {
@@ -72,37 +90,24 @@ export default function BlogsPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: {
       title: string;
-      description: string;
+      content: TiptapDoc;
       date: string;
-      edition?: string;
-      category?: string;
-      imageFile?: File | null;
-      removeImage?: boolean;
     }) => {
+      const id = editingId ?? draftId;
+      if (!id) throw new Error('Draft not ready yet');
+
       const payload = {
         title: data.title,
-        description: data.description,
+        content: data.content,
         date: data.date,
       };
 
-      const res = editingId
-        ? await api.put(API_ENDPOINTS.UPDATE_BLOG(editingId), payload)
-        : await api.post(API_ENDPOINTS.CREATE_BLOG, payload);
-
-      const id = editingId || res.data?.data?.id;
-
-      if (id && data.removeImage) {
-        await deleteContentImage('blog', id);
-      }
-      if (id && data.imageFile) {
-        await uploadContentImage('blog', id, data.imageFile);
-      }
-
-      return res;
+      return await api.put(API_ENDPOINTS.UPDATE_BLOG(id), payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blogs'] });
       setEditingId(null);
+      setDraftId(null);
     },
   });
 
@@ -141,12 +146,8 @@ export default function BlogsPage() {
 
   const handleSubmit = async (data: {
     title: string;
-    description: string;
+    content: TiptapDoc;
     date: string;
-    edition?: string;
-    category?: string;
-    imageFile?: File | null;
-    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };
@@ -159,11 +160,13 @@ export default function BlogsPage() {
 
   const handleEdit = (blog: Blog) => {
     setEditingId(blog.id);
+    setDraftId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancel = () => {
     setEditingId(null);
+    setDraftId(null);
   };
 
   if (authLoading) {
@@ -240,6 +243,7 @@ export default function BlogsPage() {
           isLoading={saveMutation.isPending}
           contentType="blog"
           onCancel={editingId ? handleCancel : undefined}
+          contentId={editingId ?? draftId}
         />
       </div>
     </div>

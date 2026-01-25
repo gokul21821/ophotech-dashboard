@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { ContentForm } from '@/components/Dashboard/ContentForm';
 import { ContentTable } from '@/components/Dashboard/ContentTable';
-import { CaseStudy } from '@/types';
+import type { CaseStudy, TiptapDoc } from '@/types';
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { BookOpen } from 'lucide-react';
 import Image from 'next/image';
-import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -53,7 +52,26 @@ const EmptyTableState = () => (
 export default function CaseStudiesPage() {
   const { isLoading: authLoading } = useProtectedRoute();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const createDraftMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post(API_ENDPOINTS.CREATE_CASE_STUDY_DRAFT);
+      return res.data?.data as CaseStudy;
+    },
+    onSuccess: (draft) => {
+      setDraftId(draft.id);
+    },
+  });
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (editingId) return;
+    if (draftId) return;
+    if (createDraftMutation.isPending) return;
+    createDraftMutation.mutate();
+  }, [authLoading, editingId, draftId, createDraftMutation]);
 
   // Fetch case studies
   const {
@@ -72,37 +90,26 @@ export default function CaseStudiesPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: {
       title: string;
-      description: string;
+      content: TiptapDoc;
       date: string;
       category?: string;
-      imageFile?: File | null;
-      removeImage?: boolean;
     }) => {
+      const id = editingId ?? draftId;
+      if (!id) throw new Error('Draft not ready yet');
+
       const payload = {
         title: data.title,
-        description: data.description,
+        content: data.content,
         date: data.date,
         category: data.category,
       };
 
-      const res = editingId
-        ? await api.put(API_ENDPOINTS.UPDATE_CASE_STUDY(editingId), payload)
-        : await api.post(API_ENDPOINTS.CREATE_CASE_STUDY, payload);
-
-      const id = editingId || res.data?.data?.id;
-
-      if (id && data.removeImage) {
-        await deleteContentImage('case-study', id);
-      }
-      if (id && data.imageFile) {
-        await uploadContentImage('case-study', id, data.imageFile);
-      }
-
-      return res;
+      return await api.put(API_ENDPOINTS.UPDATE_CASE_STUDY(id), payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['case-studies'] });
       setEditingId(null);
+      setDraftId(null);
     },
   });
 
@@ -141,11 +148,9 @@ export default function CaseStudiesPage() {
 
   const handleSubmit = async (data: {
     title: string;
-    description: string;
+    content: TiptapDoc;
     date: string;
     category?: string;
-    imageFile?: File | null;
-    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };
@@ -158,11 +163,13 @@ export default function CaseStudiesPage() {
 
   const handleEdit = (caseStudy: CaseStudy) => {
     setEditingId(caseStudy.id);
+    setDraftId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancel = () => {
     setEditingId(null);
+    setDraftId(null);
   };
 
   if (authLoading) {
@@ -239,6 +246,7 @@ export default function CaseStudiesPage() {
           isLoading={saveMutation.isPending}
           contentType="case-study"
           onCancel={editingId ? handleCancel : undefined}
+          contentId={editingId ?? draftId}
         />
       </div>
     </div>

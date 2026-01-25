@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   // Newsletters
   GET_NEWSLETTERS: '/api/newsletters',
   GET_NEWSLETTER: (id: string) => `/api/newsletters/${id}`,
+  CREATE_NEWSLETTER_DRAFT: '/api/newsletters/draft',
   CREATE_NEWSLETTER: '/api/newsletters',
   UPDATE_NEWSLETTER: (id: string) => `/api/newsletters/${id}`,
   DELETE_NEWSLETTER: (id: string) => `/api/newsletters/${id}`,
@@ -18,6 +19,7 @@ export const API_ENDPOINTS = {
   // Blogs
   GET_BLOGS: '/api/blogs',
   GET_BLOG: (id: string) => `/api/blogs/${id}`,
+  CREATE_BLOG_DRAFT: '/api/blogs/draft',
   CREATE_BLOG: '/api/blogs',
   UPDATE_BLOG: (id: string) => `/api/blogs/${id}`,
   DELETE_BLOG: (id: string) => `/api/blogs/${id}`,
@@ -27,6 +29,7 @@ export const API_ENDPOINTS = {
   // Case Studies
   GET_CASE_STUDIES: '/api/case-studies',
   GET_CASE_STUDY: (id: string) => `/api/case-studies/${id}`,
+  CREATE_CASE_STUDY_DRAFT: '/api/case-studies/draft',
   CREATE_CASE_STUDY: '/api/case-studies',
   UPDATE_CASE_STUDY: (id: string) => `/api/case-studies/${id}`,
   DELETE_CASE_STUDY: (id: string) => `/api/case-studies/${id}`,

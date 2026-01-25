@@ -1,26 +1,24 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Newsletter, Blog, CaseStudy } from '@/types';
+import { Newsletter, Blog, CaseStudy, TiptapDoc } from '@/types';
 import { formatDateForInput } from '@/lib/utils';
-import { AlertCircle, CheckCircle, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
-import Image from 'next/image';
 
 interface ContentFormProps {
   onSubmit: (data: {
     title: string;
-    description: string;
+    content: TiptapDoc;
     date: string;
     edition?: string;
     category?: string;
-    imageFile?: File | null;
-    removeImage?: boolean;
   }) => Promise<void>;
   initialData?: Newsletter | Blog | CaseStudy | null;
   isLoading?: boolean;
   contentType: 'newsletter' | 'blog' | 'case-study';
   onCancel?: () => void;
+  contentId?: string | null;
 }
 
 export function ContentForm({
@@ -29,88 +27,40 @@ export function ContentForm({
   isLoading,
   contentType,
   onCancel,
+  contentId,
 }: ContentFormProps) {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [content, setContent] = useState<TiptapDoc>({ type: 'doc', content: [{ type: 'paragraph' }] });
   const [date, setDate] = useState('');
   const [edition, setEdition] = useState('');
   const [category, setCategory] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [removeImage, setRemoveImage] = useState(false);
 
   // Refs for scroll-to-error functionality
   const titleRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Load initial data when editing
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
-      setDescription(initialData.description);
+      setContent(initialData.content); // Content is required, no fallback needed
       setDate(formatDateForInput(initialData.date));
       setEdition(contentType === 'newsletter' ? (initialData as Newsletter).edition ?? '' : '');
       setCategory(contentType === 'case-study' ? (initialData as CaseStudy).category ?? '' : '');
-      setPreviewUrl(initialData.imageUrl || null);
-      setImageFile(null);
-      setRemoveImage(false);
     } else {
       // Reset form for new item
       setTitle('');
-      setDescription('');
+      setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
       setDate(formatDateForInput(new Date().toISOString()));
       setEdition('');
       setCategory('');
-      setPreviewUrl(null);
-      setImageFile(null);
-      setRemoveImage(false);
     }
     setError('');
     setSuccess(false);
   }, [initialData, contentType]);
-
-  const handleFileSelected = (file: File | undefined | null) => {
-    if (!file) {
-      setImageFile(null);
-      return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-      setError('Only image files are allowed');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be under 5MB');
-      return;
-    }
-
-    setError('');
-    setImageFile(file);
-    setRemoveImage(false);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    handleFileSelected(file);
-  };
-
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const file = e.dataTransfer.files?.[0];
-    handleFileSelected(file);
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setPreviewUrl(null);
-    setRemoveImage(true);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,11 +82,18 @@ export function ContentForm({
       return;
     }
 
-    if (!description.trim()) {
-      setError('Description is required');
-      descriptionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // For now, rely on backend validation for the JSON doc.
+    // UX: ensure a draft exists so inline image uploads can work.
+    if (!contentId) {
+      setError('Preparing editor... please try again in a moment.');
+      return;
+    }
+
+    if (!content) {
+      setError('Content is required');
+      contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       // Focus the editor content area
-      const editorContent = descriptionRef.current?.querySelector('[contenteditable="true"]') as HTMLElement;
+      const editorContent = contentRef.current?.querySelector('[contenteditable="true"]') as HTMLElement;
       editorContent?.focus();
       return;
     }
@@ -144,23 +101,18 @@ export function ContentForm({
     try {
       await onSubmit({
         title: title.trim(),
-        description: description.trim(),
+        content,
         date,
         edition: contentType === 'newsletter' ? (edition.trim() || undefined) : undefined,
         category: contentType === 'case-study' ? (category.trim() || undefined) : undefined,
-        imageFile,
-        removeImage,
       });
 
       setSuccess(true);
       setTitle('');
-      setDescription('');
+      setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
       setDate(formatDateForInput(new Date().toISOString()));
       setEdition('');
       setCategory('');
-      setPreviewUrl(null);
-      setImageFile(null);
-      setRemoveImage(false);
 
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -239,64 +191,6 @@ export function ContentForm({
           />
         </div>
 
-        {/* Image upload */}
-        <div>
-          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
-            Image (optional)
-          </label>
-
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onDrop={handleFileDrop}
-            className="relative rounded-xl border-2 border-dashed border-[#fcd5ac] bg-[#FFFAF5] px-4 py-5 transition-colors duration-200 hover:border-[#D9751E] hover:bg-[#FFF3E3]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white border border-[#fcd5ac] text-[#D9751E]">
-                <Upload className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-[#0B1B2B]">
-                  Drag & drop an image here, or{' '}
-                  <label className="text-[#D9751E] hover:text-[#c1651a] cursor-pointer font-semibold">
-                    browse
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={isLoading}
-                      className="sr-only"
-                    />
-                  </label>
-                </p>
-                <p className="text-xs text-[#3A4A5F] mt-1">Images only, max 5MB.</p>
-              </div>
-            </div>
-
-            {previewUrl && (
-              <div className="mt-4">
-                <div className="relative h-36 w-64 overflow-hidden rounded-lg border border-[#fcd5ac]">
-                  <Image src={previewUrl} alt="Preview" fill className="object-cover" />
-                </div>
-              </div>
-            )}
-            {(previewUrl || initialData?.imageUrl) && (
-              <div className="mt-3">
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  disabled={isLoading}
-                  className="text-sm text-red-600 hover:text-red-700"
-                >
-                  Remove image
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Date */}
         <div>
           <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
@@ -345,9 +239,21 @@ export function ContentForm({
           </div>
         )}
 
-        {/* Description */}
-        <div ref={descriptionRef}>
-          <RichTextEditor content={description} onChange={setDescription} disabled={isLoading} />
+        {/* Content Editor */}
+        <div ref={contentRef}>
+          {contentId ? (
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
+              disabled={isLoading}
+              contentId={contentId}
+              contentType={contentType}
+            />
+          ) : (
+            <div className="w-full max-w-[1200px] border border-[#fcd5ac] rounded-2xl bg-gray-50 text-[#3A4A5F] px-6 py-10">
+              Preparing editor…
+            </div>
+          )}
         </div>
       </form>
     </div>

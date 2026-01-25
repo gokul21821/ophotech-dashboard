@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { ContentForm } from '@/components/Dashboard/ContentForm';
 import { ContentTable } from '@/components/Dashboard/ContentTable';
-import { Newsletter } from '@/types';
+import type { Newsletter, TiptapDoc } from '@/types';
 import api from '@/lib/api';
 import { API_ENDPOINTS } from '@/lib/config';
 import { Newspaper } from 'lucide-react';
 import Image from 'next/image';
-import { deleteContentImage, uploadContentImage } from '@/lib/uploads';
 
 // Loading Skeleton for Table
 const TableSkeleton = () => (
@@ -53,7 +52,26 @@ const EmptyTableState = () => (
 export default function NewslettersPage() {
   const { isLoading: authLoading } = useProtectedRoute();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const createDraftMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.post(API_ENDPOINTS.CREATE_NEWSLETTER_DRAFT);
+      return res.data?.data as Newsletter;
+    },
+    onSuccess: (draft) => {
+      setDraftId(draft.id);
+    },
+  });
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (editingId) return;
+    if (draftId) return;
+    if (createDraftMutation.isPending) return;
+    createDraftMutation.mutate();
+  }, [authLoading, editingId, draftId, createDraftMutation]);
 
   // Fetch newsletters
   const {
@@ -72,39 +90,26 @@ export default function NewslettersPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: {
       title: string;
-      description: string;
+      content: TiptapDoc;
       date: string;
       edition?: string;
-      imageFile?: File | null;
-      removeImage?: boolean;
     }) => {
-      // Create or update content
+      const id = editingId ?? draftId;
+      if (!id) throw new Error('Draft not ready yet');
+
       const payload = {
         title: data.title,
-        description: data.description,
+        content: data.content,
         date: data.date,
         edition: data.edition,
       };
 
-      const res = editingId
-        ? await api.put(API_ENDPOINTS.UPDATE_NEWSLETTER(editingId), payload)
-        : await api.post(API_ENDPOINTS.CREATE_NEWSLETTER, payload);
-
-      const id = editingId || res.data?.data?.id;
-
-      // Image handling: delete if requested, then upload if file provided
-      if (id && data.removeImage) {
-        await deleteContentImage('newsletter', id);
-      }
-      if (id && data.imageFile) {
-        await uploadContentImage('newsletter', id, data.imageFile);
-      }
-
-      return res;
+      return await api.put(API_ENDPOINTS.UPDATE_NEWSLETTER(id), payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newsletters'] });
       setEditingId(null);
+      setDraftId(null); // trigger new draft creation
     },
   });
 
@@ -142,11 +147,9 @@ export default function NewslettersPage() {
 
   const handleSubmit = async (data: {
     title: string;
-    description: string;
+    content: TiptapDoc;
     date: string;
     edition?: string;
-    imageFile?: File | null;
-    removeImage?: boolean;
   }) => {
     await saveMutation.mutateAsync(data);
   };
@@ -159,11 +162,13 @@ export default function NewslettersPage() {
 
   const handleEdit = (newsletter: Newsletter) => {
     setEditingId(newsletter.id);
+    setDraftId(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancel = () => {
     setEditingId(null);
+    setDraftId(null);
   };
 
   if (authLoading) {
@@ -240,6 +245,7 @@ export default function NewslettersPage() {
           isLoading={saveMutation.isPending}
           contentType="newsletter"
           onCancel={editingId ? handleCancel : undefined}
+          contentId={editingId ?? draftId}
         />
       </div>
     </div>
