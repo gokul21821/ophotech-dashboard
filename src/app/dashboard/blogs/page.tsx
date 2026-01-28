@@ -65,22 +65,14 @@ export default function BlogsPage() {
     },
   });
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (editingId) return;
-    if (draftId) return;
-    if (createDraftMutation.isPending) return;
-    createDraftMutation.mutate();
-  }, [authLoading, editingId, draftId, createDraftMutation]);
-
-  // Fetch blogs
+  // Fetch blogs (admin endpoint includes drafts + published)
   const {
     data: blogs = [],
     isLoading,
   } = useQuery({
     queryKey: ['blogs'],
     queryFn: async () => {
-      const response = await api.get(API_ENDPOINTS.GET_BLOGS);
+      const response = await api.get(API_ENDPOINTS.GET_BLOGS_ADMIN);
       return response.data.data;
     },
     enabled: !authLoading,
@@ -92,6 +84,7 @@ export default function BlogsPage() {
       title: string;
       content: TiptapDoc;
       date: string;
+      status?: string;
     }) => {
       const id = editingId ?? draftId;
       if (!id) throw new Error('Draft not ready yet');
@@ -100,6 +93,7 @@ export default function BlogsPage() {
         title: data.title,
         content: data.content,
         date: data.date,
+        ...(data.status && { status: data.status }),
       };
 
       return await api.put(API_ENDPOINTS.UPDATE_BLOG(id), payload);
@@ -148,8 +142,16 @@ export default function BlogsPage() {
     title: string;
     content: TiptapDoc;
     date: string;
+    status?: string;
   }) => {
     await saveMutation.mutateAsync(data);
+  };
+
+  const handleCreateNew = () => {
+    setEditingId(null);
+    setDraftId(null);
+    createDraftMutation.mutate();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
@@ -164,7 +166,15 @@ export default function BlogsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    // If canceling a new draft (not editing existing), delete the draft
+    if (draftId && !editingId) {
+      try {
+        await api.delete(API_ENDPOINTS.DELETE_BLOG(draftId));
+      } catch (err) {
+        console.error('Failed to delete draft:', err);
+      }
+    }
     setEditingId(null);
     setDraftId(null);
   };
@@ -205,6 +215,16 @@ export default function BlogsPage() {
 
       {/* Table Section */}
       <div className="mb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-[#0B1B2B]">All Blogs</h2>
+          <button
+            onClick={handleCreateNew}
+            disabled={createDraftMutation.isPending || editingId !== null || draftId !== null}
+            className="bg-[#D9751E] hover:bg-[#c1651a] disabled:bg-[#d9a07a] text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 flex items-center gap-2 disabled:cursor-not-allowed"
+          >
+            {createDraftMutation.isPending ? 'Creating...' : '+ Create New'}
+          </button>
+        </div>
         {isLoading ? (
           <TableSkeleton />
         ) : blogs.length === 0 ? (
@@ -235,17 +255,19 @@ export default function BlogsPage() {
         />
       </div>
 
-      {/* Form Section */}
-      <div>
-        <ContentForm
-          onSubmit={handleSubmit}
-          initialData={editingBlog || null}
-          isLoading={saveMutation.isPending}
-          contentType="blog"
-          onCancel={editingId ? handleCancel : undefined}
-          contentId={editingId ?? draftId}
-        />
-      </div>
+      {/* Form Section - Only show when editing or creating */}
+      {(editingId || draftId) && (
+        <div>
+          <ContentForm
+            onSubmit={handleSubmit}
+            initialData={editingBlog || null}
+            isLoading={saveMutation.isPending}
+            contentType="blog"
+            onCancel={handleCancel}
+            contentId={editingId ?? draftId}
+          />
+        </div>
+      )}
     </div>
   );
 }

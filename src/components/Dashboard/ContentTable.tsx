@@ -30,7 +30,7 @@ const TableRowSkeleton = ({ showMeta }: { showMeta: boolean }) => (
       <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
     </td>
     <td className="px-6 py-4">
-      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+      <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse"></div>
     </td>
     <td className="px-6 py-4 text-right">
       <div className="flex justify-end gap-2">
@@ -92,6 +92,9 @@ export function ContentTable({
               </th>
               <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Created
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
+                Status
               </th>
               <th className="px-6 py-4 text-right text-xs font-semibold text-[#0B1B2B] uppercase tracking-wider">
                 Actions
@@ -191,6 +194,17 @@ export function ContentTable({
                 </td>
                 <td className="px-6 py-4 text-sm text-[#3A4A5F]">
                   {formatDate(item.createdAt)}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'PUBLISHED'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {item.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                  </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">

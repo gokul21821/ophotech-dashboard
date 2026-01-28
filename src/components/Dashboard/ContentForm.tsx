@@ -13,6 +13,7 @@ interface ContentFormProps {
     date: string;
     edition?: string;
     category?: string;
+    status?: string;
   }) => Promise<void>;
   initialData?: Newsletter | Blog | CaseStudy | null;
   isLoading?: boolean;
@@ -34,6 +35,7 @@ export function ContentForm({
   const [date, setDate] = useState('');
   const [edition, setEdition] = useState('');
   const [category, setCategory] = useState('');
+  const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>('DRAFT');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -50,6 +52,7 @@ export function ContentForm({
       setDate(formatDateForInput(initialData.date));
       setEdition(contentType === 'newsletter' ? (initialData as Newsletter).edition ?? '' : '');
       setCategory(contentType === 'case-study' ? (initialData as CaseStudy).category ?? '' : '');
+      setStatus(initialData.status || 'DRAFT');
     } else {
       // Reset form for new item
       setTitle('');
@@ -57,6 +60,7 @@ export function ContentForm({
       setDate(formatDateForInput(new Date().toISOString()));
       setEdition('');
       setCategory('');
+      setStatus('DRAFT');
     }
     setError('');
     setSuccess(false);
@@ -105,14 +109,20 @@ export function ContentForm({
         date,
         edition: contentType === 'newsletter' ? (edition.trim() || undefined) : undefined,
         category: contentType === 'case-study' ? (category.trim() || undefined) : undefined,
+        status,
       });
 
       setSuccess(true);
-      setTitle('');
-      setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
-      setDate(formatDateForInput(new Date().toISOString()));
-      setEdition('');
-      setCategory('');
+      
+      // Only reset form if we're creating a new item, not editing
+      if (!initialData) {
+        setTitle('');
+        setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
+        setDate(formatDateForInput(new Date().toISOString()));
+        setEdition('');
+        setCategory('');
+        setStatus('DRAFT');
+      }
 
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
@@ -134,14 +144,15 @@ export function ContentForm({
           </h1>
           <div className="flex gap-3">
             <button
-              onClick={handleSubmit}
+              type="submit"
+              form="content-form"
               disabled={isLoading}
               className="bg-[#D9751E] hover:bg-[#c1651a] disabled:bg-[#d9a07a] text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-200 flex items-center gap-2"
             >
               {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
             </button>
 
-            {initialData && onCancel && (
+            {onCancel && (
               <button
                 type="button"
                 onClick={onCancel}
@@ -174,7 +185,7 @@ export function ContentForm({
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-8 pt-6 space-y-6">
+      <form id="content-form" onSubmit={handleSubmit} className="p-8 pt-6 space-y-6">
         {/* Title */}
         <div>
           <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
@@ -238,6 +249,39 @@ export function ContentForm({
             />
           </div>
         )}
+
+        {/* Status */}
+        <div>
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Status <span className="text-[#D9751E]">*</span>
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="DRAFT"
+                checked={status === 'DRAFT'}
+                onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
+                disabled={isLoading}
+                className="w-4 h-4 text-[#D9751E] focus:ring-2 focus:ring-[#D9751E]"
+              />
+              <span className="text-[#0B1B2B] font-medium">Draft</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="status"
+                value="PUBLISHED"
+                checked={status === 'PUBLISHED'}
+                onChange={(e) => setStatus(e.target.value as 'DRAFT' | 'PUBLISHED')}
+                disabled={isLoading}
+                className="w-4 h-4 text-[#D9751E] focus:ring-2 focus:ring-[#D9751E]"
+              />
+              <span className="text-[#0B1B2B] font-medium">Published</span>
+            </label>
+          </div>
+        </div>
 
         {/* Content Editor */}
         <div ref={contentRef}>

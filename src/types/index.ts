@@ -16,12 +16,15 @@ export interface User {
 export type TiptapDoc = Record<string, any>;
     
     // Content types
+    export type PublishStatus = 'DRAFT' | 'PUBLISHED';
+    
     export interface Newsletter {
       id: string;
       title: string;
       content: TiptapDoc; // Required
       date: string;
       edition?: string | null;
+      status: PublishStatus;
       authorId: string;
       createdAt: string;
       updatedAt: string;
@@ -38,6 +41,7 @@ export type TiptapDoc = Record<string, any>;
       title: string;
       content: TiptapDoc; // Required
       date: string;
+      status: PublishStatus;
       authorId: string;
       createdAt: string;
       updatedAt: string;
@@ -55,6 +59,7 @@ export type TiptapDoc = Record<string, any>;
       content: TiptapDoc; // Required
       date: string;
       category?: string | null;
+      status: PublishStatus;
       authorId: string;
       createdAt: string;
       updatedAt: string;
