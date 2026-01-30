@@ -21,6 +21,7 @@ export type TiptapDoc = Record<string, any>;
     export interface Newsletter {
       id: string;
       title: string;
+  subtitle?: string | null;
       content: TiptapDoc; // Required
       date: string;
       edition?: string | null;
@@ -39,6 +40,7 @@ export type TiptapDoc = Record<string, any>;
     export interface Blog {
       id: string;
       title: string;
+  subtitle?: string | null;
       content: TiptapDoc; // Required
       date: string;
       status: PublishStatus;
@@ -56,6 +58,7 @@ export type TiptapDoc = Record<string, any>;
     export interface CaseStudy {
       id: string;
       title: string;
+  subtitle?: string | null;
       content: TiptapDoc; // Required
       date: string;
       category?: string | null;

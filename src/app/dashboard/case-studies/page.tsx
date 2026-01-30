@@ -82,6 +82,7 @@ export default function CaseStudiesPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: {
       title: string;
+      subtitle: string;
       content: TiptapDoc;
       date: string;
       category?: string;
@@ -92,6 +93,7 @@ export default function CaseStudiesPage() {
 
       const payload = {
         title: data.title,
+        subtitle: data.subtitle,
         content: data.content,
         date: data.date,
         category: data.category,
@@ -142,6 +144,7 @@ export default function CaseStudiesPage() {
 
   const handleSubmit = async (data: {
     title: string;
+    subtitle: string;
     content: TiptapDoc;
     date: string;
     category?: string;

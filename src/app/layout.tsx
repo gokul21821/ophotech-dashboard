@@ -3,14 +3,14 @@ import Providers from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: "OphoTech | AI-Powered MVP Development in 15 Days",
+  title: "OphoTech",
   description:
     "Transform your vision into production-ready MVPs with OphoTech's AI-driven development approach.",
   icons: {
     icon: "/icons/titlebar.svg",
   },
   openGraph: {
-    title: "OphoTech | AI-Powered MVP Development in 15 Days",
+    title: "OphoTech",
     description:
       "Transform your vision into production-ready MVPs with OphoTech's AI-driven development approach.",
     url: "https://ophotech.com",

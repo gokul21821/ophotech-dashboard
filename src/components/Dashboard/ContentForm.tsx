@@ -5,10 +5,12 @@ import { Newsletter, Blog, CaseStudy, TiptapDoc } from '@/types';
 import { formatDateForInput } from '@/lib/utils';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { RichTextEditor } from './RichTextEditor';
+import type { AxiosError } from 'axios';
 
 interface ContentFormProps {
   onSubmit: (data: {
     title: string;
+    subtitle: string;
     content: TiptapDoc;
     date: string;
     edition?: string;
@@ -31,6 +33,7 @@ export function ContentForm({
   contentId,
 }: ContentFormProps) {
   const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
   const [content, setContent] = useState<TiptapDoc>({ type: 'doc', content: [{ type: 'paragraph' }] });
   const [date, setDate] = useState('');
   const [edition, setEdition] = useState('');
@@ -45,9 +48,11 @@ export function ContentForm({
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Load initial data when editing
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
+      setSubtitle((initialData as Newsletter | Blog | CaseStudy).subtitle ?? '');
       setContent(initialData.content); // Content is required, no fallback needed
       setDate(formatDateForInput(initialData.date));
       setEdition(contentType === 'newsletter' ? (initialData as Newsletter).edition ?? '' : '');
@@ -56,6 +61,7 @@ export function ContentForm({
     } else {
       // Reset form for new item
       setTitle('');
+      setSubtitle('');
       setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
       setDate(formatDateForInput(new Date().toISOString()));
       setEdition('');
@@ -65,6 +71,7 @@ export function ContentForm({
     setError('');
     setSuccess(false);
   }, [initialData, contentType]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +112,7 @@ export function ContentForm({
     try {
       await onSubmit({
         title: title.trim(),
+        subtitle,
         content,
         date,
         edition: contentType === 'newsletter' ? (edition.trim() || undefined) : undefined,
@@ -117,6 +125,7 @@ export function ContentForm({
       // Only reset form if we're creating a new item, not editing
       if (!initialData) {
         setTitle('');
+        setSubtitle('');
         setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
         setDate(formatDateForInput(new Date().toISOString()));
         setEdition('');
@@ -126,8 +135,10 @@ export function ContentForm({
 
       // Hide success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Failed to save. Please try again.';
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string }>;
+      const errorMessage =
+        axiosErr.response?.data?.error || 'Failed to save. Please try again.';
       setError(errorMessage);
     }
   };
@@ -198,6 +209,21 @@ export function ContentForm({
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] placeholder:text-[#3A4A5F] bg-white transition-all duration-200"
             placeholder="Enter title"
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Subtitle */}
+        <div>
+          <label className="block text-sm font-semibold text-[#0B1B2B] mb-3">
+            Subtitle <span className="text-[#3A4A5F] font-medium">(optional)</span>
+          </label>
+          <input
+            type="text"
+            value={subtitle}
+            onChange={(e) => setSubtitle(e.target.value)}
+            className="w-full px-4 py-3 border border-[#fcd5ac] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D9751E] focus:border-transparent text-[#0B1B2B] placeholder:text-[#3A4A5F] bg-white transition-all duration-200"
+            placeholder="Enter subtitle"
             disabled={isLoading}
           />
         </div>

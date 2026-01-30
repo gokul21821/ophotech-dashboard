@@ -82,6 +82,7 @@ export default function BlogsPage() {
   const saveMutation = useMutation({
     mutationFn: async (data: {
       title: string;
+      subtitle: string;
       content: TiptapDoc;
       date: string;
       status?: string;
@@ -91,6 +92,7 @@ export default function BlogsPage() {
 
       const payload = {
         title: data.title,
+        subtitle: data.subtitle,
         content: data.content,
         date: data.date,
         ...(data.status && { status: data.status }),
@@ -140,6 +142,7 @@ export default function BlogsPage() {
 
   const handleSubmit = async (data: {
     title: string;
+    subtitle: string;
     content: TiptapDoc;
     date: string;
     status?: string;
