@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -124,20 +123,6 @@ export default function LoginPage() {
               {isLoading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-
-          {/* Register link */}
-          <div className="mt-6 text-center">
-            <p className="text-[#3A4A5F] text-sm">
-              Don't have an account?{' '}
-              <Link
-                href="/auth/register"
-                className="text-[#D9751E] hover:text-[#c1651a] font-semibold transition-colors"
-              >
-                Register here
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { LogOut, LayoutDashboard, FileText, Newspaper, BookOpen, ChevronLeft } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Newspaper, BookOpen, ChevronLeft, Users } from 'lucide-react';
 import Image from 'next/image';
 
 export default function DashboardLayout({
@@ -39,6 +39,7 @@ export default function DashboardLayout({
     { href: '/dashboard/newsletters', icon: Newspaper, label: 'Newsletters' },
     { href: '/dashboard/blogs', icon: FileText, label: 'Blogs' },
     { href: '/dashboard/case-studies', icon: BookOpen, label: 'Case Studies' },
+    ...(user?.role === 'ADMIN' ? [{ href: '/dashboard/users', icon: Users, label: 'Manage Users' }] : []),
   ];
 
   return (

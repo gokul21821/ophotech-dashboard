@@ -6,6 +6,10 @@ export const API_ENDPOINTS = {
   LOGIN: '/api/auth/login',
   GET_ME: '/api/auth/me',
 
+  // Users (admin only)
+  GET_USERS: '/api/users',
+  DELETE_USER: (id: string) => `/api/users/${id}`,
+
   // Newsletters
   GET_NEWSLETTERS: '/api/newsletters',
   GET_NEWSLETTERS_ADMIN: '/api/newsletters/admin',

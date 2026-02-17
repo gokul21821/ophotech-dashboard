@@ -4,13 +4,21 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import api from '@/lib/api';
 import { User, AuthResponse } from '@/types';
 
+export interface CreateUserParams {
+  email: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  role?: 'ADMIN' | 'USER';
+}
+
 export interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
+  createUser: (params: CreateUserParams) => Promise<User>;
   logout: () => void;
 }
 
@@ -69,37 +77,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Register function
-  const register = async (
-    email: string,
-    username: string,
-    password: string
-  ): Promise<void> => {
-    try {
-      setIsLoading(true);
-      const response = await api.post<AuthResponse>('/api/auth/register', {
-        email,
-        username,
-        password,
-        confirmPassword: password,
-      });
+  // Create user (admin only - does not switch session)
+  const createUser = async (params: CreateUserParams): Promise<User> => {
+    const response = await api.post<{ success: boolean; data: User }>('/api/auth/register', {
+      email: params.email,
+      username: params.username,
+      password: params.password,
+      confirmPassword: params.confirmPassword,
+      role: params.role ?? 'USER',
+    });
 
-      const { user, token } = response.data;
-
-      // Store token and user
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // Update state
-      setToken(token);
-      setUser(user);
-      setIsAuthenticated(true);
-    } catch (error) {
-      setIsAuthenticated(false);
-      throw error;
-    } finally {
-      setIsLoading(false);
+    if (!response.data?.data) {
+      throw new Error('Invalid response from server');
     }
+    return response.data.data;
   };
 
   // Logout function
@@ -117,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated,
     login,
-    register,
+    createUser,
     logout,
   };
 
